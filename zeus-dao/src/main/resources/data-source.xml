@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <bean name="dataSource" class="org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy">
+        <constructor-arg>
+            <bean class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
+                <property name="driverClass">
+                    <value>${zeus.db.driverClass}</value>
+                </property>
+                <property name="jdbcUrl">
+                    <value>${zeus.db.url}</value>
+                </property>
+                <property name="user">
+                    <value>${zeus.db.username}</value>
+                </property>
+                <property name="password">
+                    <value>${zeus.db.password}</value>
+                </property>
+                <!--连接池中的最小连接数-->
+                <property name="minPoolSize" value="10" />
+                <!--连接池中的最大连接数　default 15 -->
+                <property name="maxPoolSize" value="100" />
+
+                <!--最大空闲时间，　1800秒内未使用的连接被丢弃,　若为０则永不丢弃, default 0-->
+                <property name="maxIdleTime" value="1800" />
+
+                <!--当连接池中的连接耗尽的时候, c3p0一次同时获取的连接数, default: 3-->
+                <property name="acquireIncrement" value="10" />
+
+                <property name="maxStatements" value="0" />
+                <property name="initialPoolSize" value="20" />
+                <!--每30秒检查所有连接池中的空闲连接 default 0-->
+                <property name="idleConnectionTestPeriod" value="30"/>
+
+                <!--定义在从数据库获取新连接的时候失败后重复尝试的次数　-->
+                <property name="acquireRetryAttempts" value="30" />
+
+                <property name="breakAfterAcquireFailure" value="true" />
+                <property name="testConnectionOnCheckin" value="true" />
+                <property name="testConnectionOnCheckout" value="true" />
+            </bean>
+        </constructor-arg>
+    </bean>
+
+    <bean name="jdbcTemplate" class="org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate">
+        <constructor-arg ref="dataSource" />
+    </bean>
+
+    <bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <constructor-arg ref="dataSource" />
+    </bean>
+
+    <tx:annotation-driven transaction-manager="txManager"/>
+
+    <bean id="mybatisTransactionTemplate" class="org.springframework.transaction.support.TransactionTemplate">
+        <constructor-arg ref="txManager"/>
+    </bean>
+</beans>
